@@ -17,13 +17,52 @@ public class ZPoolMiner {
         for(String s: getAlgoList()){
             System.out.println(s + " "  + getAlgoJsonObject(s,algoHandle).getGpuHashrate() 
                     + getAlgoJsonObject(s,algoHandle).getGpuHashrateDenom() + "/s"
-                    + " * " + getAlgoJsonObject(s,algoHandle).getActualLast24h());
+                    + " * " + getAlgoJsonObject(s,algoHandle).getEstimateCurrent());
             System.out.println("= " + getProfit(s,algoHandle));
             System.out.println();
 
-        }
+                    }
+        while(true)
+            mine(algoHandle);
 
 	}
+    public static void mine(AlgoStats AH){
+        String bestAlgo = "";
+        double max = -1;
+        for (String s: getAlgoList()){
+            if(getProfit(s,AH) > max){
+                //System.out.println(s + "m " + max + "sm " + getProfit(s,AH));
+                bestAlgo = s;
+                max = getProfit(s,AH);
+            }
+        }
+		ProcessBuilder ps = getProcessBuilderForAlgo(bestAlgo, AH);
+		double a;
+		BenchMark bm = new BenchMark(ps);
+		Thread t = new Thread(new Runnable() {
+			public void run() {
+				bm.start();
+			}
+		});
+		t.start();
+        System.out.println("Mining " + bestAlgo);
+		try {
+			Thread.sleep(5000 * 60);
+		} catch (Exception e) {
+		}
+
+		while (!t.isInterrupted()) {
+			try {
+				Thread.sleep(1000);
+			} catch (Exception e) {
+		    }
+		System.out.println("Waiting for thread to die");
+	    }
+	    System.out.println("Done");
+
+
+
+    }
 
     public static void saveBenchmarkStats(AlgoStats AH){
         try {
@@ -62,7 +101,7 @@ public class ZPoolMiner {
     public static double getProfit(String algo,AlgoStats AH){
         double multiplyer = getProfitMultiplyer(algo,getAlgoJsonObject(algo,AH).getGpuHashrateDenom());
         double hashrate = getAlgoJsonObject(algo,AH).getGpuHashrate();
-        double profit =   getAlgoJsonObject(algo,AH).getActualLast24h();
+        double profit =   getAlgoJsonObject(algo,AH).getEstimateCurrent();
 
         return multiplyer * hashrate * profit;
     }

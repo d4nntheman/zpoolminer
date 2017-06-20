@@ -39,18 +39,20 @@ public class BenchMark {
 				}
 				String[] split = line.split(" ");
 				for (String s : split) {
-					System.out.println(s + " ");
+					//System.out.println(s + " ");
 					if (isDouble(s)) {
 						if (avgCount == 0) {
+					        System.out.print(s + " ");
 							avg += Double.parseDouble(s);
 							avgCount++;
 						} else {
+					        System.out.print(s + " ");
 							avg += Double.parseDouble(s);
 							avg /= 2;
 							avgCount++;
 						}
-					} else if (s.contains("/s")) {
-						System.out.println("\n" + s + " ");
+					} else if (s.contains("H/s")) {
+						System.out.println(s);
                         hashDenomination = s.toUpperCase().charAt(0);
 
 					}
