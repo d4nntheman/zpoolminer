@@ -27,6 +27,7 @@ public class BenchMark {
 	public double start() {
 		avg = 0;
 		try {
+            boolean first = true;
 			ps.redirectErrorStream(true);
 			Process pr = ps.start();
 			_proc = pr;
@@ -41,7 +42,9 @@ public class BenchMark {
 				for (String s : split) {
 					// System.out.println(s + " ");
 					if (isDouble(s)) {
-						if (avgCount == 0) {
+                        if(first){
+                            first = false;
+                        } else if (avgCount == 0) {
 							System.out.print(s + " ");
 							avg += Double.parseDouble(s);
 							avgCount++;

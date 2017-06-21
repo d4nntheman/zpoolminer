@@ -39,7 +39,8 @@ public class ZPoolMiner {
         BenchMark bm = new BenchMark(ps);
 		t = new Thread(new Runnable() {
 		public void run() {
-			bm.start();
+            bm.start();
+
 		}
 		});
 		t.start();
@@ -47,11 +48,12 @@ public class ZPoolMiner {
         while(bestAlgo.compareTo(lastAlgo) == 0){
 		    System.out.println("Mining " + lastAlgo);
 		    try {
-			    Thread.sleep(1000 *60);
+			    Thread.sleep(1000 * 10);
 		    } catch (Exception e) {
 
 		    }
             AH.updateAlgos();
+            loadBenchmarkStats(AH);
             max = 0;
             for (String s : getAlgoList()) {
                 double tmp = getProfit(s,AH);
@@ -66,6 +68,7 @@ public class ZPoolMiner {
 
 		while (!t.isInterrupted()) {
 			System.out.println("Waiting for thread to die");
+            t.interrupt();
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {
