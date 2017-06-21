@@ -167,6 +167,7 @@ public class AlgoStats {
 			this.m7m = m7m;
 		}
 
+		//@SerializedName("myr-gr")
 		private Algo myrgr;
 
 		public Algo getMyrGr() {

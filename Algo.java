@@ -1,3 +1,10 @@
+ import java.io.*;
+ import java.util.*;
+ import com.google.gson.*;
+ import org.apache.commons.io.*;
+ import org.apache.http.*;
+
+
 public class Algo {
 	private String name;
 
@@ -119,7 +126,7 @@ public class Algo {
 		this.gpuHashrate = gpuHashrate;
 	}
 
-    private char gpuHashrateDenom;
+	private char gpuHashrateDenom;
 
 	public char getGpuHashrateDenom() {
 		return this.gpuHashrateDenom;

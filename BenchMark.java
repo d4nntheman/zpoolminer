@@ -9,14 +9,14 @@ public class BenchMark {
 	private double avg;
 	private int avgCount;
 	private Process _proc;
-        //spelling
-    private char hashDenomination;
+	// spelling
+	private char hashDenomination;
 
 	public BenchMark(ProcessBuilder p) {
 		this.ps = p;
 		avg = 0;
 		avgCount = 0;
-        hashDenomination = '0';
+		hashDenomination = '0';
 	}
 
 	public void stop() {
@@ -39,21 +39,21 @@ public class BenchMark {
 				}
 				String[] split = line.split(" ");
 				for (String s : split) {
-					//System.out.println(s + " ");
+					// System.out.println(s + " ");
 					if (isDouble(s)) {
 						if (avgCount == 0) {
-					        System.out.print(s + " ");
+							System.out.print(s + " ");
 							avg += Double.parseDouble(s);
 							avgCount++;
 						} else {
-					        System.out.print(s + " ");
+							System.out.print(s + " ");
 							avg += Double.parseDouble(s);
 							avg /= 2;
 							avgCount++;
 						}
 					} else if (s.contains("H/s")) {
 						System.out.println(s);
-                        hashDenomination = s.toUpperCase().charAt(0);
+						hashDenomination = s.toUpperCase().charAt(0);
 
 					}
 				}
@@ -77,10 +77,11 @@ public class BenchMark {
 	}
 
 	public char getHashrateD() {
-        //spelling
+		// spelling
 		return hashDenomination;
 
 	}
+
 	public static boolean isDouble(String s) {
 		try {
 			Double.parseDouble(s);

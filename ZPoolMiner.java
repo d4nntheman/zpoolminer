@@ -3,39 +3,41 @@ import java.util.*;
 import com.google.gson.*;
 import org.apache.commons.io.*;
 import org.apache.http.*;
+
 public class ZPoolMiner {
 	public static String BTCAddress = "1Ju5Z88SHyu9yFhiX5tsxrWyC5EMbH38yN";
 
 	public static void main(String[] args) {
 		AlgoStats algoHandle = new AlgoStats();
 
-        if(!loadBenchmarkStats(algoHandle)){
-		    benchMarkAllAlgos(algoHandle);
-            saveBenchmarkStats(algoHandle);
-        }
-        System.out.println("**********************");
-        for(String s: getAlgoList()){
-            System.out.println(s + " "  + getAlgoJsonObject(s,algoHandle).getGpuHashrate() 
-                    + getAlgoJsonObject(s,algoHandle).getGpuHashrateDenom() + "/s"
-                    + " * " + getAlgoJsonObject(s,algoHandle).getEstimateCurrent());
-            System.out.println("= " + getProfit(s,algoHandle));
-            System.out.println();
+		if (!loadBenchmarkStats(algoHandle)) {
+			benchMarkAllAlgos(algoHandle);
+			saveBenchmarkStats(algoHandle);
+		}
+		System.out.println("**********************");
+		for (String s : getAlgoList()) {
+			System.out.println(s + " " + getAlgoJsonObject(s, algoHandle).getGpuHashrate()
+					+ getAlgoJsonObject(s, algoHandle).getGpuHashrateDenom() + "/s" + " * "
+					+ getAlgoJsonObject(s, algoHandle).getEstimateCurrent());
+			System.out.println("= " + getProfit(s, algoHandle));
+			System.out.println();
 
-                    }
-        while(true)
-            mine(algoHandle);
+		}
+		while (true)
+			mine(algoHandle);
 
 	}
-    public static void mine(AlgoStats AH){
-        String bestAlgo = "";
-        double max = -1;
-        for (String s: getAlgoList()){
-            if(getProfit(s,AH) > max){
-                //System.out.println(s + "m " + max + "sm " + getProfit(s,AH));
-                bestAlgo = s;
-                max = getProfit(s,AH);
-            }
-        }
+
+	public static void mine(AlgoStats AH) {
+		String bestAlgo = "";
+		double max = -1;
+		for (String s : getAlgoList()) {
+			if (getProfit(s, AH) > max) {
+				// System.out.println(s + "m " + max + "sm " + getProfit(s,AH));
+				bestAlgo = s;
+				max = getProfit(s, AH);
+			}
+		}
 		ProcessBuilder ps = getProcessBuilderForAlgo(bestAlgo, AH);
 		double a;
 		BenchMark bm = new BenchMark(ps);
@@ -45,7 +47,7 @@ public class ZPoolMiner {
 			}
 		});
 		t.start();
-        System.out.println("Mining " + bestAlgo);
+		System.out.println("Mining " + bestAlgo);
 		try {
 			Thread.sleep(5000 * 60);
 		} catch (Exception e) {
@@ -55,56 +57,54 @@ public class ZPoolMiner {
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {
-		    }
-		System.out.println("Waiting for thread to die");
-	    }
-	    System.out.println("Done");
+			}
+			System.out.println("Waiting for thread to die");
+		}
+		System.out.println("Done");
 
+	}
 
+	public static void saveBenchmarkStats(AlgoStats AH) {
+		try {
+			DataOutputStream out = new DataOutputStream(new FileOutputStream("test1.txt"));
+			for (String s : getAlgoList()) {
+				out.writeDouble(getAlgoJsonObject(s, AH).getGpuHashrate());
+				out.writeChar(getAlgoJsonObject(s, AH).getGpuHashrateDenom());
 
-    }
+			}
+			out.close();
 
-    public static void saveBenchmarkStats(AlgoStats AH){
-        try {
-            DataOutputStream out = new DataOutputStream(new FileOutputStream("test1.txt"));
-            for(String s: getAlgoList()){
-               out.writeDouble(getAlgoJsonObject(s,AH).getGpuHashrate()); 
-               out.writeChar(getAlgoJsonObject(s,AH).getGpuHashrateDenom()); 
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-            }
-            out.close();
+	public static boolean loadBenchmarkStats(AlgoStats AH) {
+		File f = new File("test1.txt");
+		if (!f.exists()) {
+			return false;
+		}
+		try {
+			DataInputStream in = new DataInputStream(new FileInputStream("test1.txt"));
+			for (String s : getAlgoList()) {
+				getAlgoJsonObject(s, AH).setGpuHashrate(in.readDouble());
+				getAlgoJsonObject(s, AH).setGpuHashrateDenom(in.readChar());
+			}
+			in.close();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
 
-    public static boolean loadBenchmarkStats(AlgoStats AH){
-        File f = new File("test1.txt");
-        if(!f.exists()){
-            return false;
-        }
-        try {
-            DataInputStream in = new DataInputStream (new FileInputStream("test1.txt"));
-            for(String s: getAlgoList()){
-               getAlgoJsonObject(s,AH).setGpuHashrate(in.readDouble());
-               getAlgoJsonObject(s,AH).setGpuHashrateDenom(in.readChar());
-            }
-            in.close();
+	public static double getProfit(String algo, AlgoStats AH) {
+		double multiplyer = getProfitMultiplyer(algo, getAlgoJsonObject(algo, AH).getGpuHashrateDenom());
+		double hashrate = getAlgoJsonObject(algo, AH).getGpuHashrate();
+		double profit = getAlgoJsonObject(algo, AH).getEstimateCurrent();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return true;
-    }
-
-    public static double getProfit(String algo,AlgoStats AH){
-        double multiplyer = getProfitMultiplyer(algo,getAlgoJsonObject(algo,AH).getGpuHashrateDenom());
-        double hashrate = getAlgoJsonObject(algo,AH).getGpuHashrate();
-        double profit =   getAlgoJsonObject(algo,AH).getEstimateCurrent();
-
-        return multiplyer * hashrate * profit;
-    }
+		return multiplyer * hashrate * profit;
+	}
 
 	public static void benchMarkAllAlgos(AlgoStats algoHandle) {
 		for (String s : getAlgoList()) {
@@ -132,7 +132,7 @@ public class ZPoolMiner {
 			double u = bm.getAvg();
 			getAlgoJsonObject(s, algoHandle).setGpuHashrate(u);
 			getAlgoJsonObject(s, algoHandle).setGpuHashrateDenom(bm.getHashrateD());
-			System.out.println(s + "AVG hashrate is " + u + bm.getHashrateD()+ "/s");
+			System.out.println(s + "AVG hashrate is " + u + bm.getHashrateD() + "/s");
 			t.interrupt();
 			bm.stop();
 
@@ -176,7 +176,9 @@ public class ZPoolMiner {
 		case "veltor":
 		case "groestl":
 		case "nist5":
-		case "myrgr":
+			return AH.getRootJSON().getNist5();
+		case "myr-gr":
+			return AH.getRootJSON().getMyrGr();
 		case "qubit":
 		case "bitcore":
 			return AH.getRootJSON().getBitcore();
@@ -225,7 +227,15 @@ public class ZPoolMiner {
 					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getDecred().getPort(), "-u",
 					BTCAddress, "-p", "x");
 		case "c11":
+			return new ProcessBuilder("./bin/ccminer_tp", "-a", "c11", "-o",
+					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getC11().getPort(), "-u",
+					BTCAddress, "-p", "x");
+
 		case "sib":
+			return new ProcessBuilder("./bin/ccminer_tp", "-a", "sib", "-o",
+					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getSib().getPort(), "-u",
+					BTCAddress, "-p", "x");
+
 		case "x11evo":
 			return new ProcessBuilder("./bin/ccminer_tp", "-a", "x11evo", "-o",
 					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getX11evo().getPort(), "-u",
@@ -239,8 +249,20 @@ public class ZPoolMiner {
 		case "x11":
 		case "veltor":
 		case "groestl":
+			return new ProcessBuilder("./bin/ccminer_tp", "-a", "groestl", "-o",
+					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getGroestl().getPort(), "-u",
+					BTCAddress, "-p", "x");
+
 		case "nist5":
-		case "myrgr":
+			return new ProcessBuilder("./bin/ccminer_tp", "-a", "nist5", "-o",
+					"stratum+tcp://" + algo + ".mine.zpool.ca:" + algoHandle.getRootJSON().getNist5().getPort(), "-u",
+					BTCAddress, "-p", "x");
+
+		case "myr-gr":
+			return new ProcessBuilder("./bin/ccminer_tp", "-a", "myr-gr", "-o",
+					"stratum+tcp://" + "myr-gr" + ".mine.zpool.ca:" + algoHandle.getRootJSON().getMyrGr().getPort(),
+					"-u", BTCAddress, "-p", "x");
+
 		case "qubit":
 		case "bitcore":
 			return new ProcessBuilder("./bin/ccminer_tp", "-a", "bitcore", "-o",
@@ -267,27 +289,24 @@ public class ZPoolMiner {
 		}
 		return null;
 	}
-    public static String [] getAlgoList(){
 
-        String[] algoList = {
+	public static String[] getAlgoList() {
+
+		String[] algoList = {
 				// "m7m",
 				// "equihash",
 				"neoscrypt",
 				// "xevan", //Build ccminer for xevan tp !have
 				"hmq1725",
 				// "x17",
-				"blake2s", "blakecoin", "decred",
-				// "c11",
-				// "sib",
-				"x11evo",
+				"blake2s", "blakecoin", "decred", "c11", "sib", "x11evo",
 				// "yescrypt",
 				"lyra2v2",
 				// "scrypt",
 				// "x11",
 				// "veltor",
-				// "groestl",
-				// "nist5",
-				// "myrgr",
+				"groestl", "nist5",
+                // "myr-gr",
 				// "qubit",
 				"bitcore",
 				// "quark",
@@ -297,64 +316,65 @@ public class ZPoolMiner {
 				// "x15",
 				// "sha256"
 		};
-        return algoList;
-    }
+		return algoList;
+	}
 
-    public static double getProfitMultiplyer(String algo, char hashD){
-    //* values in mBTC/MH/day, per GH for sha256 & blake algos, kSol. for equihash
-        switch(algo){
-            //MH
-            case "neoscrypt":
-            case "hmq1725":
-            case "x11evo":
-            case "lyra2v2":
-            case "bitcore":
-			case "timetravel":
-            case "lbry": 
-            case "skein":
-                switch(hashD){
-                    case 'M':
-                        return 1;
-                    case 'G':
-                        return 10;
-                    case 'K':
-                        return .01;
-                }
-                break;
-				//case "m7m",
-				// "equihash",
-				// "xevan",
-				// "x17",
-            case "blake2s":
-            case "blakecoin": 
-            case "decred":
-                switch(hashD){
-                    case 'M':
-                        return .01;
-                    case 'G':
-                        return 1;
-                    case 'K':
-                        return .001;
-                }
-                break;
-				// "c11",
-				// "sib",
-				// "yescrypt",
-				// "scrypt",
-				// "x11",
-				// "veltor",
-				// "groestl",
-				// "nist5",
-				// "myrgr",
-				// "qubit",
-				// "quark",
-				// "x13",
-				// "x14",
-				// "x15",
-				// "sha256"
+	public static double getProfitMultiplyer(String algo, char hashD) {
+		// * values in mBTC/MH/day, per GH for sha256 & blake algos, kSol. for
+		// equihash
+		switch (algo) {
+		// MH
+		case "neoscrypt":
+		case "hmq1725":
+		case "x11evo":
+		case "lyra2v2":
+		case "bitcore":
+		case "timetravel":
+		case "lbry":
+		case "skein":
+		case "nist5":
+		case "myrgr":
+		case "c11":
+		case "sib":
+		case "groestl":
+			switch (hashD) {
+			case 'M':
+				return 1;
+			case 'G':
+				return 10;
+			case 'K':
+				return .01;
+			}
+			break;
+		// case "m7m",
+		// "equihash",
+		// "xevan",
+		// "x17",
+		case "blake2s":
+		case "blakecoin":
+		case "decred":
+			switch (hashD) {
+			case 'M':
+				return .01;
+			case 'G':
+				return 1;
+			case 'K':
+				return .001;
+			}
+			break;
+		// "yescrypt",
+		// "scrypt",
+		// "x11",
+		// "veltor",
+		// "qubit",
+		// "quark",
+		// "x13",
+		// "x14",
+		// "x15",
+		// "sha256"
 		}
-        return 0;
-    }
+		return 0;
+	}
 
 	public static boolean isDouble(String s) {
 		try {
