@@ -11,7 +11,7 @@ public class AlgoStats {
 		updateAlgos();
 	}
 
-	private static RootJSON algos;
+	private RootJSON algos;
 
 	private String getJson(String sURL) throws Exception {
 		BufferedReader reader = null;
@@ -34,7 +34,8 @@ public class AlgoStats {
 		}
 	}
 
-	private void updateAlgos() {
+	public void updateAlgos() {
+        //algos = null;
 		String url = "http://www.zpool.ca/api/status";
 		String json = null;
 		try {
@@ -43,8 +44,8 @@ public class AlgoStats {
 			e.printStackTrace();
 		}
 		Gson gson = new Gson();
-
-		algos = gson.fromJson(json, RootJSON.class);
+        if(json != null && !json.isEmpty() && !json.equals(" "))
+		    algos = gson.fromJson(json, RootJSON.class);
 	}
 
 	public String getBestAlgo() {
@@ -55,7 +56,6 @@ public class AlgoStats {
 		return algos;
 	}
 
-	// Test this to see if the abstracct algo class works with json
 	public class RootJSON {
 		private Algo bitcore;
 

@@ -8,60 +8,76 @@ public class ZPoolMiner {
 	public static String BTCAddress = "1Ju5Z88SHyu9yFhiX5tsxrWyC5EMbH38yN";
 
 	public static void main(String[] args) {
-		AlgoStats algoHandle = new AlgoStats();
+		AlgoStats AH = new AlgoStats();
 
-		if (!loadBenchmarkStats(algoHandle)) {
-			benchMarkAllAlgos(algoHandle);
-			saveBenchmarkStats(algoHandle);
+		if (!loadBenchmarkStats(AH)) {
+			benchMarkAllAlgos(AH);
+			saveBenchmarkStats(AH);
 		}
 		System.out.println("**********************");
 		for (String s : getAlgoList()) {
-			System.out.println(s + " " + getAlgoJsonObject(s, algoHandle).getGpuHashrate()
-					+ getAlgoJsonObject(s, algoHandle).getGpuHashrateDenom() + "/s" + " * "
-					+ getAlgoJsonObject(s, algoHandle).getEstimateCurrent());
-			System.out.println("= " + getProfit(s, algoHandle));
+			System.out.println(s + " " + getAlgoJsonObject(s, AH).getGpuHashrate()
+					+ getAlgoJsonObject(s, AH).getGpuHashrateDenom() + "/s" + " * "
+					+ getAlgoJsonObject(s, AH).getEstimateCurrent());
+			System.out.println("= " + getProfit(s, AH));
 			System.out.println();
 
 		}
-		while (true)
-			mine(algoHandle);
-
-	}
-
-	public static void mine(AlgoStats AH) {
-		String bestAlgo = "";
+        while(true){
+        String bestAlgo = "";
+        String lastAlgo = "";
 		double max = -1;
+        Thread t = null;
 		for (String s : getAlgoList()) {
 			if (getProfit(s, AH) > max) {
-				// System.out.println(s + "m " + max + "sm " + getProfit(s,AH));
 				bestAlgo = s;
 				max = getProfit(s, AH);
 			}
 		}
+        lastAlgo = bestAlgo;
 		ProcessBuilder ps = getProcessBuilderForAlgo(bestAlgo, AH);
-		double a;
-		BenchMark bm = new BenchMark(ps);
-		Thread t = new Thread(new Runnable() {
-			public void run() {
-				bm.start();
-			}
+        BenchMark bm = new BenchMark(ps);
+		t = new Thread(new Runnable() {
+		public void run() {
+			bm.start();
+		}
 		});
 		t.start();
-		System.out.println("Mining " + bestAlgo);
-		try {
-			Thread.sleep(5000 * 60);
-		} catch (Exception e) {
-		}
+
+        while(bestAlgo.compareTo(lastAlgo) == 0){
+		    System.out.println("Mining " + lastAlgo);
+		    try {
+			    Thread.sleep(1000 *60);
+		    } catch (Exception e) {
+
+		    }
+            AH.updateAlgos();
+            max = 0;
+            for (String s : getAlgoList()) {
+                double tmp = getProfit(s,AH);
+			    if (tmp > max) {
+				    bestAlgo = s;
+				    max = tmp;
+			    }
+		    }
+        }
+        t.interrupt();
+        bm.stop();
 
 		while (!t.isInterrupted()) {
+			System.out.println("Waiting for thread to die");
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {
-			}
-			System.out.println("Waiting for thread to die");
-		}
-		System.out.println("Done");
 
+			}
+		}
+        }
+
+	}
+
+	public static void mine(AlgoStats AH) {
+		
 	}
 
 	public static void saveBenchmarkStats(AlgoStats AH) {
